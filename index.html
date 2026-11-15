@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STYLE SHOP</title>
+<script src="https://js.tosspayments.com/v2/standard"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; color: #222; background: #fafafa; }
+  a { color: inherit; }
+  button { font: inherit; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
+  header { position: sticky; top: 0; z-index: 10; background: #fff; border-bottom: 1px solid #e5e5e5; }
+  .header-inner { display: flex; justify-content: space-between; align-items: center; height: 60px; }
+  .logo { font-size: 20px; font-weight: 800; letter-spacing: 1px; text-decoration: none; color: #111; }
+  .cart-link { text-decoration: none; font-weight: 600; padding: 8px 14px; border: 1px solid #ddd; border-radius: 999px; }
+  .cart-count { display: inline-block; min-width: 22px; margin-left: 4px; padding: 0 6px; border-radius: 999px; background: #111; color: #fff; font-size: 12px; line-height: 20px; text-align: center; }
+  .page { max-width: 1040px; margin: 0 auto; padding: 24px 16px 56px; min-height: 70vh; }
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .chip { padding: 8px 16px; border: 1px solid #ccc; border-radius: 999px; background: #fff; cursor: pointer; }
+  .chip.active { background: #111; border-color: #111; color: #fff; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+  .card { display: block; background: #fff; border: 1px solid #eee; border-radius: 8px; overflow: hidden; text-decoration: none; transition: box-shadow .15s; }
+  .card:hover { box-shadow: 0 6px 16px rgba(0, 0, 0, .08); }
+  .thumb { display: flex; align-items: center; justify-content: center; height: 220px; color: rgba(0, 0, 0, .4); font-size: 13px; }
+  .card-body { padding: 12px 14px 16px; }
+  .card-cat { font-size: 12px; color: #888; }
+  .card-name { margin: 4px 0 6px; font-weight: 600; }
+  .price { font-weight: 700; }
+  .back { display: inline-block; margin-bottom: 16px; color: #555; text-decoration: none; }
+  .detail { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+  .detail .thumb { height: 440px; border-radius: 8px; }
+  h1 { margin: 4px 0 8px; font-size: 24px; }
+  .price.big { font-size: 22px; margin-bottom: 24px; }
+  .opt { margin-bottom: 20px; }
+  .opt-title { font-weight: 600; margin-bottom: 8px; }
+  .opt-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .opt-btn { display: inline-flex; align-items: center; gap: 6px; min-width: 56px; padding: 9px 14px; border: 1px solid #ccc; border-radius: 6px; background: #fff; cursor: pointer; }
+  .opt-btn.selected { border: 2px solid #111; padding: 8px 13px; }
+  .opt-btn:disabled { background: #f2f2f2; color: #aaa; text-decoration: line-through; cursor: not-allowed; }
+  .swatch { display: inline-block; width: 14px; height: 14px; border-radius: 50%; border: 1px solid #ccc; }
+  .hint { min-height: 20px; color: #888; font-size: 14px; }
+  .add-btn { width: 100%; padding: 16px; border: none; border-radius: 6px; background: #111; color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; }
+  .add-btn:disabled { background: #ccc; cursor: not-allowed; }
+  .cart-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid #222; }
+  .row { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; padding: 18px 0; border-bottom: 1px solid #e5e5e5; }
+  .row-info { flex: 1; min-width: 160px; }
+  .row-name { font-weight: 600; }
+  .row-opt, .row-price { margin-top: 4px; font-size: 14px; color: #777; }
+  .qty { display: flex; align-items: center; gap: 8px; }
+  .qty button { width: 30px; height: 30px; border: 1px solid #ccc; border-radius: 4px; background: #fff; cursor: pointer; }
+  .qty button:disabled { color: #bbb; cursor: not-allowed; }
+  .qty span { min-width: 24px; text-align: center; }
+  .row-sub { min-width: 90px; text-align: right; font-weight: 700; }
+  .remove { border: none; background: none; color: #888; text-decoration: underline; cursor: pointer; }
+  .total { display: flex; justify-content: space-between; align-items: baseline; margin-top: 24px; font-size: 18px; }
+  .total strong { font-size: 22px; }
+  .note { margin: 8px 0 0; font-size: 13px; color: #888; text-align: right; }
+  .empty { padding: 60px 0; text-align: center; color: #666; }
+  .btn { display: inline-block; margin-top: 12px; padding: 12px 24px; border-radius: 6px; background: #111; color: #fff; text-decoration: none; }
+  #toast { position: fixed; left: 50%; bottom: 32px; padding: 12px 20px; border-radius: 6px; background: #111; color: #fff; opacity: 0; transform: translate(-50%, 20px); transition: opacity .2s, transform .2s; pointer-events: none; }
+  #toast.show { opacity: 1; transform: translate(-50%, 0); }
+  a.add-btn { display: block; margin-top: 20px; text-align: center; text-decoration: none; }
+  #payment-method, #agreement { margin-top: 24px; }
+  @media (max-width: 720px) {
+    .detail { grid-template-columns: 1fr; gap: 20px; }
+    .detail .thumb { height: 300px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap header-inner">
+    <a class="logo" href="#/">STYLE SHOP</a>
+    <a class="cart-link" href="#/cart">장바구니 <span class="cart-count" id="cart-count">0</span></a>
+  </div>
+</header>
+<main class="page" id="main"></main>
+<div id="toast"></div>
+<script>
+  const CATEGORIES = ['전체', '상의', '하의', '아우터', '액세서리'];
+  const COLOR_HEX = { 화이트: '#ffffff', 블랙: '#111111', 베이지: '#d8c3a5', 스카이블루: '#8ecae6', 아이보리: '#f5f0e1', 그레이: '#9a9a9a', 연청: '#9cc3e0', 진청: '#2f4a6d', 차콜: '#3d3d3d', 카멜: '#c19a6b', 네이비: '#1f2a44', 카키: '#6b6b47', 브라운: '#6b4423' };
+  const PRODUCTS = [
+    { id: 'p1', name: '베이직 오버핏 티셔츠', category: '상의', price: 19000, tone: '#efeae2', sizes: ['S', 'M', 'L', 'XL'], colors: ['화이트', '블랙', '베이지'], stock: 4, soldOut: ['XL|베이지'] },
+    { id: 'p2', name: '옥스퍼드 셔츠', category: '상의', price: 39000, tone: '#dfe9f2', sizes: ['S', 'M', 'L', 'XL'], colors: ['화이트', '스카이블루'], stock: 4, soldOut: ['S|스카이블루'] },
+    { id: 'p3', name: '울 블렌드 니트', category: '상의', price: 45000, tone: '#e8dccb', sizes: ['S', 'M', 'L'], colors: ['아이보리', '그레이'], stock: 3, soldOut: ['L|그레이'] },
+    { id: 'p4', name: '와이드 데님 팬츠', category: '하의', price: 49000, tone: '#c9dbe8', sizes: ['S', 'M', 'L', 'XL'], colors: ['연청', '진청'], stock: 4, soldOut: ['M|연청'] },
+    { id: 'p5', name: '코튼 슬랙스', category: '하의', price: 39000, tone: '#d9d6cf', sizes: ['S', 'M', 'L', 'XL'], colors: ['차콜', '베이지'], stock: 5, soldOut: [] },
+    { id: 'p6', name: '크롭 레더 자켓', category: '아우터', price: 129000, tone: '#c7bdb3', sizes: ['S', 'M', 'L'], colors: ['블랙', '브라운'], stock: 2, soldOut: ['S|브라운'] },
+    { id: 'p7', name: '롱 울 코트', category: '아우터', price: 159000, tone: '#d6c6ab', sizes: ['S', 'M', 'L'], colors: ['카멜', '차콜'], stock: 3, soldOut: ['S|차콜'] },
+    { id: 'p8', name: '경량 바람막이', category: '아우터', price: 59000, tone: '#cfd8c4', sizes: ['S', 'M', 'L', 'XL'], colors: ['네이비', '카키'], stock: 5, soldOut: [] },
+    { id: 'p9', name: '레더 벨트', category: '액세서리', price: 25000, tone: '#e4dcd0', sizes: ['FREE'], colors: ['블랙', '브라운'], stock: 5, soldOut: ['FREE|브라운'] },
+    { id: 'p10', name: '볼캡', category: '액세서리', price: 18000, tone: '#dcdde4', sizes: ['FREE'], colors: ['블랙', '네이비'], stock: 5, soldOut: ['FREE|네이비'] }
+  ];
+
+  const STORAGE_KEY = 'style-shop-cart';
+  const won = n => n.toLocaleString('ko-KR') + '원';
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  const findProduct = id => PRODUCTS.find(p => p.id === id);
+  const isSoldOut = (p, size, color) => p.soldOut.includes(`${size}|${color}`);
+
+  let cart = loadCart();
+  let view = 'list';
+  let currentCat = '전체';
+  let currentPid = null;
+  let picked = {};
+  let toastTimer;
+
+  function loadCart() {
+    try {
+      const items = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      return Array.isArray(items) ? items.filter(i => i && findProduct(i.pid)) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function saveCart() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(cart)); } catch {}
+  }
+
+  function commitCart() {
+    saveCart();
+    updateHeader();
+    render();
+  }
+
+  function addToCart(pid, size, color) {
+    const p = findProduct(pid);
+    const item = cart.find(i => i.pid === pid && i.size === size && i.color === color);
+    if (item) {
+      if (item.qty >= p.stock) return toast('재고 한도까지 담았습니다.');
+      item.qty += 1;
+    } else {
+      cart.push({ pid, size, color, qty: 1 });
+    }
+    saveCart();
+    updateHeader();
+    toast('장바구니에 담았습니다.');
+  }
+
+  function changeQty(index, delta) {
+    const item = cart[index];
+    const next = item.qty + delta;
+    if (next < 1 || next > findProduct(item.pid).stock) return;
+    item.qty = next;
+    commitCart();
+  }
+
+  function removeItem(index) {
+    cart.splice(index, 1);
+    commitCart();
+  }
+
+  let widgets = null;
+
+  function cartTotal() {
+    return cart.reduce((sum, it) => sum + findProduct(it.pid).price * it.qty, 0);
+  }
+
+  function orderName() {
+    const first = findProduct(cart[0].pid).name;
+    return cart.length > 1 ? `${first} 외 ${cart.length - 1}건` : first;
+  }
+
+  function renderCheckout() {
+    if (!cart.length) {
+      return `<div class="empty"><p>장바구니가 비었습니다.</p><a class="btn" href="#/">쇼핑 계속하기</a></div>`;
+    }
+    const lines = cart.map(it => {
+      const p = findProduct(it.pid);
+      return `
+        <li class="row">
+          <div class="row-info">
+            <div class="row-name">${esc(p.name)}</div>
+            <div class="row-opt">${esc(it.size)} / ${esc(it.color)} · ${it.qty}개</div>
+          </div>
+          <div class="row-sub">${won(p.price * it.qty)}</div>
+        </li>`;
+    }).join('');
+    return `
+      <a class="back" href="#/cart">← 장바구니로</a>
+      <h1>주문서</h1>
+      <ul class="cart-list">${lines}</ul>
+      <div class="total"><span>결제 금액</span><strong>${won(cartTotal())}</strong></div>
+      <div id="payment-method"></div>
+      <div id="agreement"></div>
+      <button class="add-btn" data-action="pay" disabled>결제하기</button>`;
+  }
+
+  async function mountCheckout() {
+    try {
+      const { clientKey } = await (await fetch('/api/config')).json();
+      widgets = TossPayments(clientKey).widgets({ customerKey: TossPayments.ANONYMOUS });
+      await widgets.setAmount({ currency: 'KRW', value: cartTotal() });
+      await Promise.all([
+        widgets.renderPaymentMethods({ selector: '#payment-method', variantKey: 'DEFAULT' }),
+        widgets.renderAgreement({ selector: '#agreement' })
+      ]);
+      document.querySelector('[data-action="pay"]').disabled = false;
+    } catch (err) {
+      const area = document.getElementById('payment-method');
+      if (area) area.innerHTML = `<p class="hint">결제 화면을 불러오지 못했습니다. ${esc(err.message)}</p>`;
+    }
+  }
+
+  async function requestPay() {
+    try {
+      await widgets.requestPayment({
+        orderId: crypto.randomUUID(),
+        orderName: orderName(),
+        successUrl: `${location.origin}/success`,
+        failUrl: `${location.origin}/fail`
+      });
+    } catch (err) {
+      toast(err.message || '결제를 시작하지 못했습니다.');
+    }
+  }
+
+  function resultBox(title, desc) {
+    return `<div class="empty"><h1>${title}</h1><p>${desc}</p><a class="btn" href="#/">쇼핑 계속하기</a></div>`;
+  }
+
+  async function showSuccess(params) {
+    const main = document.getElementById('main');
+    const orderId = params.get('orderId') || '';
+    try {
+      const res = await fetch('/api/payments/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentKey: params.get('paymentKey'), orderId, amount: Number(params.get('amount')) })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        main.innerHTML = resultBox('결제 승인에 실패했습니다', esc(data.message || '잠시 후 다시 시도해 주세요.'));
+        return;
+      }
+      cart = [];
+      saveCart();
+      updateHeader();
+      main.innerHTML = resultBox('결제가 완료되었습니다', `주문번호 ${esc(orderId)}<br>결제 금액 ${won(data.totalAmount)}`);
+    } catch {
+      main.innerHTML = resultBox('결제 승인에 실패했습니다', '서버와 통신하지 못했습니다.');
+    }
+  }
+
+  function showFail(params) {
+    document.getElementById('main').innerHTML = resultBox('결제에 실패했습니다', esc(params.get('message') || '결제가 완료되지 않았습니다.'));
+  }
+
+  function sizeDisabled(p, size) {
+    const colors = picked.color ? [picked.color] : p.colors;
+    return colors.every(c => isSoldOut(p, size, c));
+  }
+
+  function colorDisabled(p, color) {
+    const sizes = picked.size ? [picked.size] : p.sizes;
+    return sizes.every(s => isSoldOut(p, s, color));
+  }
+
+  function updateHeader() {
+    document.getElementById('cart-count').textContent = cart.reduce((sum, i) => sum + i.qty, 0);
+  }
+
+  function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 1500);
+  }
+
+  function renderList() {
+    const list = currentCat === '전체' ? PRODUCTS : PRODUCTS.filter(p => p.category === currentCat);
+    const filters = CATEGORIES.map(c =>
+      `<button class="chip${c === currentCat ? ' active' : ''}" data-action="cat" data-cat="${esc(c)}">${esc(c)}</button>`
+    ).join('');
+    const cards = list.map(p => `
+      <a class="card" href="#/p/${p.id}">
+        <div class="thumb" style="background:${p.tone}">상품 이미지</div>
+        <div class="card-body">
+          <div class="card-cat">${esc(p.category)}</div>
+          <div class="card-name">${esc(p.name)}</div>
+          <div class="price">${won(p.price)}</div>
+        </div>
+      </a>`).join('');
+    return `<div class="filters">${filters}</div><div class="grid">${cards}</div>`;
+  }
+
+  function renderDetail(p) {
+    const ready = picked.size && picked.color;
+    const hint = !picked.size ? '사이즈를 선택해 주세요.' : !picked.color ? '색상을 선택해 주세요.' : '';
+    const sizeBtns = p.sizes.map(s =>
+      `<button class="opt-btn${picked.size === s ? ' selected' : ''}" data-action="size" data-size="${esc(s)}" ${sizeDisabled(p, s) ? 'disabled' : ''}>${esc(s)}</button>`
+    ).join('');
+    const colorBtns = p.colors.map(c =>
+      `<button class="opt-btn${picked.color === c ? ' selected' : ''}" data-action="color" data-color="${esc(c)}" ${colorDisabled(p, c) ? 'disabled' : ''}><i class="swatch" style="background:${COLOR_HEX[c]}"></i>${esc(c)}</button>`
+    ).join('');
+    return `
+      <a class="back" href="#/">← 목록으로</a>
+      <div class="detail">
+        <div class="thumb" style="background:${p.tone}">상품 이미지</div>
+        <div>
+          <div class="card-cat">${esc(p.category)}</div>
+          <h1>${esc(p.name)}</h1>
+          <div class="price big">${won(p.price)}</div>
+          <div class="opt">
+            <div class="opt-title">사이즈</div>
+            <div class="opt-row">${sizeBtns}</div>
+          </div>
+          <div class="opt">
+            <div class="opt-title">색상</div>
+            <div class="opt-row">${colorBtns}</div>
+          </div>
+          <p class="hint">${hint}</p>
+          <button class="add-btn" data-action="add" ${ready ? '' : 'disabled'}>장바구니 담기</button>
+        </div>
+      </div>`;
+  }
+
+  function renderCart() {
+    if (!cart.length) {
+      return `<div class="empty"><p>장바구니가 비었습니다.</p><a class="btn" href="#/">쇼핑 계속하기</a></div>`;
+    }
+    const rows = cart.map((it, i) => {
+      const p = findProduct(it.pid);
+      return `
+        <li class="row">
+          <div class="row-info">
+            <div class="row-name">${esc(p.name)}</div>
+            <div class="row-opt">${esc(it.size)} / ${esc(it.color)}</div>
+            <div class="row-price">${won(p.price)}</div>
+          </div>
+          <div class="qty">
+            <button data-action="qty" data-index="${i}" data-delta="-1" ${it.qty <= 1 ? 'disabled' : ''}>−</button>
+            <span>${it.qty}</span>
+            <button data-action="qty" data-index="${i}" data-delta="1" ${it.qty >= p.stock ? 'disabled' : ''}>+</button>
+          </div>
+          <div class="row-sub">${won(p.price * it.qty)}</div>
+          <button class="remove" data-action="remove" data-index="${i}">삭제</button>
+        </li>`;
+    }).join('');
+    return `
+      <h1>장바구니</h1>
+      <ul class="cart-list">${rows}</ul>
+      <div class="total"><span>합계</span><strong>${won(cartTotal())}</strong></div>
+      <p class="note">배송비는 포함되지 않습니다.</p>
+      <a class="add-btn" href="#/checkout">결제하기</a>
+      <a class="back" href="#/">← 쇼핑 계속하기</a>`;
+  }
+
+  function render() {
+    const main = document.getElementById('main');
+    if (view === 'cart') {
+      main.innerHTML = renderCart();
+    } else if (view === 'checkout') {
+      main.innerHTML = renderCheckout();
+      if (cart.length) mountCheckout();
+    } else if (view === 'detail') {
+      main.innerHTML = renderDetail(findProduct(currentPid));
+    } else {
+      main.innerHTML = renderList();
+    }
+    updateHeader();
+  }
+
+  function route() {
+    if (location.pathname === '/success' || location.pathname === '/fail') {
+      const params = new URLSearchParams(location.search);
+      const isSuccess = location.pathname === '/success';
+      history.replaceState(null, '', '/');
+      updateHeader();
+      return isSuccess ? showSuccess(params) : showFail(params);
+    }
+    const detail = location.hash.match(/^#\/p\/(\w+)$/);
+    if (location.hash === '#/cart') {
+      view = 'cart';
+    } else if (location.hash === '#/checkout') {
+      view = 'checkout';
+    } else if (detail && findProduct(detail[1])) {
+      view = 'detail';
+      currentPid = detail[1];
+      picked = {};
+    } else {
+      view = 'list';
+    }
+    window.scrollTo(0, 0);
+    render();
+  }
+
+  document.addEventListener('click', e => {
+    const el = e.target.closest('[data-action]');
+    if (!el || el.disabled) return;
+    const action = el.dataset.action;
+    if (action === 'cat') { currentCat = el.dataset.cat; render(); }
+    else if (action === 'size') { picked.size = el.dataset.size; render(); }
+    else if (action === 'color') { picked.color = el.dataset.color; render(); }
+    else if (action === 'add') addToCart(currentPid, picked.size, picked.color);
+    else if (action === 'qty') changeQty(Number(el.dataset.index), Number(el.dataset.delta));
+    else if (action === 'remove') removeItem(Number(el.dataset.index));
+    else if (action === 'pay') requestPay();
+  });
+
+  window.addEventListener('hashchange', route);
+  route();
+</script>
+</body>
+</html>
